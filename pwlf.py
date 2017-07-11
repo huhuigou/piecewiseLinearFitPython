@@ -289,3 +289,54 @@ class piecewise_lin_fit:
         
         #   calculate the number of variables I have to solve for
         self.nVar = self.numberOfSegments - 1
+
+    def findBreaks(self,x,y):
+        #   return breaks in time series y
+        #   step 1、Polynomial fitting
+        #   step 2、seeking roots
+
+        breaks = []
+
+        #   determine n in Polynomial fitting
+        n = self.findPolyN(x,y)
+
+        #    fit the Polynomial 
+        z1 = np.polyfit(x, y,n)
+
+        #   Form a function
+        f1 = np.poly1d(z1)
+
+        #   seeking roots
+        f_pi= np.polyder(f1) 
+        root  = np.roots(f_pi) 
+
+        #   store the breaks
+        k = 0
+        while k < len(root):
+            if(root[k]>min(x) and root[k] <max(x)):
+                breaks.append(root[k])
+            k = k +1    
+        return sorted(breaks)
+
+    def findPolyN(self,x,y):
+        #   determine n in Polynomial fitting
+        #   find the first one who makes the value of Least Squares Method less than 10  
+        #   you can modify the parameter(10) to meet your requirement
+        cursum = 0
+        presum = 0
+        n = 1
+        while  1:
+            z1 = np.polyfit(x, y,n)
+            f1 = np.poly1d(z1)
+            yvals=f1(x)
+            i = 0
+            sum = 0           
+            for i in range(0,len(y)):
+                sum =0.5*( sum +(y[i]-yvals[i])**2)
+                i = i +1
+            presum = cursum
+            cursum =sum     
+            if(cursum < 10 and presum>=cursum):
+                break
+            n = n + 1
+        return n
